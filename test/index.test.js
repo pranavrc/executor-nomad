@@ -11,7 +11,6 @@ metadata:
   name: {{build_id_with_prefix}}
   container: {{container}}
   launchVersion: {{launcher_version}}
-  serviceAccount: {{service_account}}
   cpu: {{cpu}}
   memory: {{memory}}
 command:
@@ -32,8 +31,7 @@ describe('index', function () {
     const testStoreUri = 'http://store:8080';
     const testContainer = 'node:4';
     const testLaunchVersion = 'stable';
-    const testServiceAccount = 'default';
-    const podsUrl = 'https://kubernetes.default/api/v1/namespaces/default/pods';
+    const nomadUrl = 'https://nomad.default/v1/jobs';
 
     before(() => {
         mockery.enable({
@@ -52,9 +50,9 @@ describe('index', function () {
 
         fsMock.existsSync.returns(true);
 
-        fsMock.readFileSync.withArgs('/var/run/secrets/kubernetes.io/serviceaccount/token')
+        fsMock.readFileSync.withArgs('/var/run/secrets/nomad.io/serviceaccount/token')
             .returns('api_key');
-        fsMock.readFileSync.withArgs(sinon.match(/config\/pod.yaml.tim/))
+        fsMock.readFileSync.withArgs(sinon.match(/config\/nomad.yaml.tim/))
             .returns(TEST_TIM_YAML);
 
         mockery.registerMock('fs', fsMock);
@@ -85,23 +83,20 @@ describe('index', function () {
 
     it('supports specifying a specific version', () => {
         assert.equal(executor.launchVersion, 'stable');
-        assert.equal(executor.serviceAccount, 'default');
         assert.equal(executor.token, 'api_key');
-        assert.equal(executor.host, 'kubernetes.default');
+        assert.equal(executor.host, 'nomad.default');
         executor = new Executor({
-            kubernetes: {
+            nomad: {
                 token: 'api_key2',
-                host: 'kubernetes2',
+                host: 'nomad2',
                 serviceAccount: 'foobar',
                 jobsNamespace: 'baz',
                 resources: {
                     cpu: {
-                        high: 8,
-                        low: 1
+                        high: 600
                     },
                     memory: {
-                        high: 5,
-                        low: 1
+                        high: 4000
                     }
                 }
             },
@@ -110,29 +105,23 @@ describe('index', function () {
         });
         assert.equal(executor.prefix, 'beta_');
         assert.equal(executor.token, 'api_key2');
-        assert.equal(executor.host, 'kubernetes2');
+        assert.equal(executor.host, 'nomad2');
         assert.equal(executor.launchVersion, 'v1.2.3');
-        assert.equal(executor.serviceAccount, 'foobar');
         assert.equal(executor.jobsNamespace, 'baz');
-        assert.equal(executor.highCpu, 8);
-        assert.equal(executor.lowCpu, 1);
-        assert.equal(executor.highMemory, 5);
-        assert.equal(executor.lowMemory, 1);
+        assert.equal(executor.highCpu, 600);
+        assert.equal(executor.highMemory, 4000);
     });
 
     it('allow empty options', () => {
         fsMock.existsSync.returns(false);
         executor = new Executor();
         assert.equal(executor.launchVersion, 'stable');
-        assert.equal(executor.serviceAccount, 'default');
         assert.equal(executor.token, '');
-        assert.equal(executor.host, 'kubernetes.default');
+        assert.equal(executor.host, 'nomad.default');
         assert.equal(executor.launchVersion, 'stable');
         assert.equal(executor.prefix, '');
-        assert.equal(executor.highCpu, 6);
-        assert.equal(executor.lowCpu, 2);
-        assert.equal(executor.highMemory, 12);
-        assert.equal(executor.lowMemory, 2);
+        assert.equal(executor.highCpu, 600);
+        assert.equal(executor.highMemory, 4000);
     });
 
     it('extends base class', () => {
@@ -166,7 +155,7 @@ describe('index', function () {
             }
         };
         const deleteConfig = {
-            uri: podsUrl,
+            uri: nomadUrl,
             method: 'DELETE',
             qs: {
                 labelSelector: `sdbuild=beta_${testBuildId}`
@@ -236,7 +225,7 @@ describe('index', function () {
             }
         };
         const postConfig = {
-            uri: podsUrl,
+            uri: nomadUrl,
             method: 'POST',
             json: {
                 metadata: {

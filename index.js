@@ -9,10 +9,7 @@ const yaml = require('js-yaml');
 const fs = require('fs');
 const hoek = require('hoek');
 
-const CPU_RESOURCE = 'beta.screwdriver.cd/cpu';
-const RAM_RESOURCE = 'beta.screwdriver.cd/ram';
-
-class K8sExecutor extends Executor {
+class NomadExecutor extends Executor {
     /**
      * Constructor
      * @method constructor
@@ -20,15 +17,11 @@ class K8sExecutor extends Executor {
      * @param  {Object} options.ecosystem                             Screwdriver Ecosystem
      * @param  {Object} options.ecosystem.api                         Routable URI to Screwdriver API
      * @param  {Object} options.ecosystem.store                       Routable URI to Screwdriver Store
-     * @param  {Object} options.kubernetes                            Kubernetes configuration
-     * @param  {String} [options.kubernetes.token]                    API Token (loaded from /var/run/secrets/kubernetes.io/serviceaccount/token if not provided)
-     * @param  {String} [options.kubernetes.host=kubernetes.default]  Kubernetes hostname
-     * @param  {String} [options.kubernetes.serviceAccount=default]   Service Account for builds
-     * @param  {String} [options.kubernetes.resources.cpu.high=6]     Value for HIGH CPU (in cores)
-     * @param  {Number} [options.kubernetes.resources.cpu.low=2]      Value for LOW CPU (in cores)
-     * @param  {Number} [options.kubernetes.resources.memory.high=12] Value for HIGH memory (in GB)
-     * @param  {Number} [options.kubernetes.resources.memory.low=2]   Value for LOW memory (in GB)
-     * @param  {Number} [options.kubernetes.jobsNamespace=default]    Pods namespace for Screwdriver Jobs
+     * @param  {Object} options.nomad                                 Nomad configuration
+     * @param  {String} [options.nomad.token]                         API Token (loaded from /var/run/secrets/nomad.io/serviceaccount/token if not provided)
+     * @param  {String} [options.nomad.host=nomad.default]            Nomad hostname (https://host.com:4646/v1/jobs)
+     * @param  {String} [options.nomad.resources.cpu.high=600]        Value for HIGH CPU (in Mhz)
+     * @param  {Number} [options.nomad.resources.memory.high=4096]    Value for HIGH memory (in MB)
      * @param  {String} [options.launchVersion=stable]                Launcher container version to use
      * @param  {String} [options.prefix='']                           Prefix for job name
      * @param  {String} [options.fusebox]                             Options for the circuit breaker (https://github.com/screwdriver-cd/circuit-fuses)
@@ -36,30 +29,25 @@ class K8sExecutor extends Executor {
     constructor(options = {}) {
         super();
 
-        this.kubernetes = options.kubernetes || {};
+        this.nomad = options.nomad || {};
         this.ecosystem = options.ecosystem;
-        if (this.kubernetes.token) {
-            this.token = this.kubernetes.token;
+        if (this.nomad.token) {
+            this.token = this.nomad.token;
         } else {
-            const tokenPath = '/var/run/secrets/kubernetes.io/serviceaccount/token';
+            const tokenPath = '/var/run/secrets/nomad.io/serviceaccount/token';
 
             this.token = fs.existsSync(tokenPath) ? fs.readFileSync(tokenPath).toString() : '';
         }
-        this.host = this.kubernetes.host || 'kubernetes.default';
+        this.host = this.nomad.host || 'nomad.default';
         this.launchVersion = options.launchVersion || 'stable';
         this.prefix = options.prefix || '';
-        this.serviceAccount = this.kubernetes.serviceAccount || 'default';
-        this.jobsNamespace = this.kubernetes.jobsNamespace || 'default';
-        this.podsUrl = `https://${this.host}/api/v1/namespaces/${this.jobsNamespace}/pods`;
         this.breaker = new Fusebox(request, options.fusebox);
-        this.highCpu = hoek.reach(options, 'kubernetes.resources.cpu.high', { default: 6 });
-        this.lowCpu = hoek.reach(options, 'kubernetes.resources.cpu.low', { default: 2 });
-        this.highMemory = hoek.reach(options, 'kubernetes.resources.memory.high', { default: 12 });
-        this.lowMemory = hoek.reach(options, 'kubernetes.resources.memory.low', { default: 2 });
+        this.highCpu = hoek.reach(options, 'nomad.resources.cpu.high', { default: 600 });
+        this.highMemory = hoek.reach(options, 'nomad.resources.memory.high', { default: 1024 });
     }
 
     /**
-     * Starts a k8s build
+     * Starts a nomad build
      * @method start
      * @param  {Object}   config            A configuration object
      * @param  {Integer}  config.buildId    ID for the build
@@ -68,11 +56,9 @@ class K8sExecutor extends Executor {
      * @return {Promise}
      */
     _start(config) {
-        const cpuConfig = hoek.reach(config, 'annotations', { default: {} })[CPU_RESOURCE];
-        const ramConfig = hoek.reach(config, 'annotations', { default: {} })[RAM_RESOURCE];
-        const CPU = (cpuConfig === 'HIGH') ? this.highCpu * 1000 : this.lowCpu * 1000; // 6000 millicpu or 2000 millicpu
-        const MEMORY = (ramConfig === 'HIGH') ? this.highMemory : this.lowMemory;      // 12GB or 2GB
-        const podTemplate = tinytim.renderFile(path.resolve(__dirname, './config/pod.yaml.tim'), {
+        const CPU = this.highCpu;
+        const MEMORY = this.highMemory;
+        const nomadTemplate = tinytim.renderFile(path.resolve(__dirname, './config/nomad.yaml.tim'), {
             build_id_with_prefix: `${this.prefix}${config.buildId}`,
             build_id: config.buildId,
             container: config.container,
@@ -80,25 +66,21 @@ class K8sExecutor extends Executor {
             store_uri: this.ecosystem.store,
             token: config.token,
             launcher_version: this.launchVersion,
-            service_account: this.serviceAccount,
             cpu: CPU,
             memory: MEMORY
         });
 
         const options = {
-            uri: this.podsUrl,
+            uri: this.host,
             method: 'POST',
-            json: yaml.safeLoad(podTemplate),
-            headers: {
-                Authorization: `Bearer ${this.token}`
-            },
+            json: yaml.safeLoad(nomadTemplate),
             strictSSL: false
         };
 
         return this.breaker.runCommand(options)
             .then((resp) => {
                 if (resp.statusCode !== 201) {
-                    throw new Error(`Failed to create pod: ${JSON.stringify(resp.body)}`);
+                    throw new Error(`Failed to create nomad: ${JSON.stringify(resp.body)}`);
                 }
 
                 return null;
@@ -106,7 +88,7 @@ class K8sExecutor extends Executor {
     }
 
     /**
-     * Stop a k8s build
+     * Stop a nomad build
      * @method stop
      * @param  {Object}   config            A configuration object
      * @param  {Integer}  config.buildId    ID for the build
@@ -114,21 +96,15 @@ class K8sExecutor extends Executor {
      */
     _stop(config) {
         const options = {
-            uri: this.podsUrl,
+            uri: this.host+'/'+this.prefix+this.buildId,
             method: 'DELETE',
-            qs: {
-                labelSelector: `sdbuild=${this.prefix}${config.buildId}`
-            },
-            headers: {
-                Authorization: `Bearer ${this.token}`
-            },
             strictSSL: false
         };
 
         return this.breaker.runCommand(options)
             .then((resp) => {
                 if (resp.statusCode !== 200) {
-                    throw new Error(`Failed to delete pod: ${JSON.stringify(resp.body)}`);
+                    throw new Error(`Failed to delete nomad: ${JSON.stringify(resp.body)}`);
                 }
 
                 return null;
@@ -145,4 +121,4 @@ class K8sExecutor extends Executor {
     }
 }
 
-module.exports = K8sExecutor;
+module.exports = NomadExecutor;
