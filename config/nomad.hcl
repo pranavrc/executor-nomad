@@ -24,7 +24,7 @@
 #   token                 jwt token for chatting with api/store
 # 
 # cd config
-# jt nomad.hcl '{"dc":["southlake","arlington"],"build_id_with_prefix":"{{build_id_with_prefix}}","launcher_version":"{{launcher_version}}","api_uri":"{{api_uri}}","store_uri":"{{store_uri}}","build_id":"{{build_id}}","container":"{{container}}","token":"{{token}}"}' > nomad.yaml.tim 
+# jt nomad.hcl '{"dc":["southlake","arlington"],"build_id_with_prefix":"{{build_id_with_prefix}}","launcher_version":"{{launcher_version}}","api_uri":"{{api_uri}}","store_uri":"{{store_uri}}","build_id":"{{build_id}}","container":"{{container}}","token":"{{token}}"}' | nomad run -output - > nomad.yaml.tim
 #
 
 
