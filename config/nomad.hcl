@@ -50,6 +50,8 @@ docker pull screwdrivercd/launcher:{{launcher_version}}
 id=$(docker create screwdrivercd/launcher:{{launcher_version}})
 LAUNCHER="/opt/sd/launch --api-uri {{api_uri}} --store-uri {{store_uri}} --emitter /opt/sd/emitter {{build_id}}"
 LOGGER="/opt/sd/logservice --emitter /opt/sd/emitter --api-uri {{store_uri}} --build {{build_id}}"
+echo 'pull/create {{container}}, make sure the current one is cached'
+docker pull {{container}}
 docker run \
   --entrypoint /opt/sd/tini \
   -e SD_TOKEN="$SD_TOKEN" \
