@@ -19,7 +19,7 @@ class NomadExecutor extends Executor {
      * @param  {Object} options.ecosystem.store                       Routable URI to Screwdriver Store
      * @param  {Object} options.nomad                                 Nomad configuration
      * @param  {String} [options.nomad.token]                         API Token (loaded from /var/run/secrets/nomad.io/serviceaccount/token if not provided)
-     * @param  {String} [options.nomad.host=nomad.default]            Nomad hostname (https://host.com:4646/v1/jobs)
+     * @param  {String} [options.nomad.host=nomad.default]            Nomad hostname (https://host.com:4646)
      * @param  {String} [options.nomad.resources.cpu.high=600]        Value for HIGH CPU (in Mhz)
      * @param  {Number} [options.nomad.resources.memory.high=4096]    Value for HIGH memory (in MB)
      * @param  {String} [options.launchVersion=stable]                Launcher container version to use
@@ -72,11 +72,11 @@ class NomadExecutor extends Executor {
         });
 
         console.log('executor-nomad: POST')
-        console.log(this.host)
+        console.log(this.host + '/v1/jobs')
         console.log(nomadTemplate)
 
         const options = {
-            uri: this.host,
+            uri: this.host + '/v1/jobs',
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${this.token}`
@@ -104,7 +104,7 @@ class NomadExecutor extends Executor {
      */
     _stop(config) {
         const options = {
-            uri: this.host+'/'+this.prefix+config.buildId,
+            uri: this.host+'/v1/job/'+this.prefix+config.buildId,
             method: 'executor-nomad: DELETE',
             headers: {
                 Authorization: `Bearer ${this.token}`
@@ -113,7 +113,7 @@ class NomadExecutor extends Executor {
         };
 
         console.log('DELETE')
-        console.log(this.host+'/'+this.prefix+config.buildId)
+        console.log(this.host+'/v1/job/'+this.prefix+config.buildId)
 
         return this.breaker.runCommand(options)
             .then((resp) => {
