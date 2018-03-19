@@ -52,6 +52,7 @@ LAUNCHER="/opt/sd/launch --api-uri {{api_uri}} --store-uri {{store_uri}} --emitt
 LOGGER="/opt/sd/logservice --emitter /opt/sd/emitter --api-uri {{store_uri}} --build {{build_id}}"
 docker run \
   --entrypoint /opt/sd/tini \
+  -e SD_TOKEN="$SD_TOKEN" \
   --volumes-from $id \
   {{container}} \
   "--" \
