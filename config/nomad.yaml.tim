@@ -1,123 +1,86 @@
-{
-    "Job": {
-        "Stop": null,
-        "Region": "us",
-        "Namespace": null,
-        "ID": "{{build_id_with_prefix}}",
-        "ParentID": null,
-        "Name": "{{build_id_with_prefix}}",
-        "Type": "batch",
-        "Priority": null,
-        "AllAtOnce": null,
-        "Datacenters": [
-            "southlake",
-            "arlington"
-        ],
-        "Constraints": null,
-        "TaskGroups": [
-            {
-                "Name": "executor",
-                "Count": null,
-                "Constraints": null,
-                "Tasks": [
-                    {
-                        "Name": "executor",
-                        "Driver": "raw_exec",
-                        "User": "",
-                        "Config": {
-                            "args": [
-                                "local/bootstrap.sh"
-                            ],
-                            "command": "/bin/bash"
-                        },
-                        "Constraints": null,
-                        "Env": {
-                            "SD_TOKEN": "{{token}}"
-                        },
-                        "Services": [
-                            {
-                                "Id": "",
-                                "Name": "launcher",
-                                "Tags": [
-                                    "launcher"
-                                ],
-                                "PortLabel": "",
-                                "AddressMode": "",
-                                "Checks": [
-                                    {
-                                        "Id": "",
-                                        "Name": "",
-                                        "Type": "script",
-                                        "Command": "/usr/bin/echo",
-                                        "Args": [
-                                            "okeydokee"
-                                        ],
-                                        "Path": "",
-                                        "Protocol": "",
-                                        "PortLabel": "",
-                                        "Interval": 10000000000,
-                                        "Timeout": 2000000000,
-                                        "InitialStatus": "",
-                                        "TLSSkipVerify": false,
-                                        "Header": null,
-                                        "Method": "",
-                                        "CheckRestart": null
-                                    }
-                                ],
-                                "CheckRestart": null
-                            }
-                        ],
-                        "Resources": {
-                            "CPU": 2000,
-                            "MemoryMB": 4096,
-                            "DiskMB": null,
-                            "IOPS": null,
-                            "Networks": null
-                        },
-                        "Meta": null,
-                        "KillTimeout": null,
-                        "LogConfig": null,
-                        "Artifacts": null,
-                        "Vault": null,
-                        "Templates": [
-                            {
-                                "SourcePath": null,
-                                "DestPath": "local/bootstrap.sh",
-                                "EmbeddedTmpl": "echo 'pull/create screwdrivercd launcher'\ndocker pull screwdrivercd/launcher:{{launcher_version}}\nid=$(docker create screwdrivercd/launcher:{{launcher_version}})\nLAUNCHER=\"/opt/sd/launch --api-uri {{api_uri}} --store-uri {{store_uri}} --emitter /opt/sd/emitter {{build_id}}\"\nLOGGER=\"/opt/sd/logservice --emitter /opt/sd/emitter --api-uri {{store_uri}} --build {{build_id}}\"\ndocker run \\\n  --entrypoint /opt/sd/tini \\\n  --volumes-from $id \\\n  {{container}} \\\n  \"--\" \\\n  \"/bin/sh\" \\\n  \"-c\" \\\n  \"$LAUNCHER \u0026 $LOGGER \u0026 wait \\$(jobs -p)\"\necho 'remove screwdrivercd launcher that we mounted from'\ndocker rm $id\n          ",
-                                "ChangeMode": "restart",
-                                "ChangeSignal": null,
-                                "Splay": 5000000000,
-                                "Perms": "0644",
-                                "LeftDelim": null,
-                                "RightDelim": null,
-                                "Envvars": null,
-                                "VaultGrace": null
-                            }
-                        ],
-                        "DispatchPayload": null,
-                        "Leader": false,
-                        "ShutdownDelay": 0
-                    }
-                ],
-                "RestartPolicy": null,
-                "EphemeralDisk": null,
-                "Update": null,
-                "Meta": null
-            }
-        ],
-        "Update": null,
-        "Periodic": null,
-        "ParameterizedJob": null,
-        "Payload": null,
-        "Meta": null,
-        "VaultToken": null,
-        "Status": null,
-        "StatusDescription": null,
-        "Stable": null,
-        "Version": null,
-        "SubmitTime": null,
-        "CreateIndex": null,
-        "ModifyIndex": null,
-        "JobModifyIndex": null
+# vim: tabstop=8 expandtab shiftwidth=2 softtabstop=2
+#
+# launch the screwdriver executor mounting volumes from screwdrivercd/launcher
+#
+# this file is used to create the wireline api call for nomad
+# there is an issue with the datacenters, need to get that and the regions
+# from outside somewhere.  for now, hard coded.
+#
+# jt nomad.hcl '{"dc":["southlake","arlington"],"build_id_with_prefix":"{{build_id_with_prefix}}","launcher_version":"{{launcher_version}}","api_uri":"{{api_uri}}","store_uri":"{{store_uri}}","build_id":"{{build_id}}","container":"{{container}}","token":"{{token}}"}' | nomad run -output - > nomad.yaml.tim
+# 
+#
+# I basically copied the kubernetes executor and modified the template.
+#
+# Author: Greg Fausak
+# Sun Mar 18 08:31:44 CDT 2018
+#
+# args:
+#   build_id_with_prefix  build-1??
+#   launcher_version      stable,latest
+#   api_uri               https://api.com
+#   store_uri             https://store.com
+#   build_id              1
+#   container             private.registry.com:5000/image:latest
+#   token                 jwt token for chatting with api/store
+# 
+# jt config/pod.yaml.tim '{"dc":["southlake","arlington"],"build_id_with_prefix":"{{build_id_with_prefix}}","launcher_version":"{{launcher_version}}","api_uri":"{{api_uri}}","store_uri":"{{store_uri}}","build_id":"{{build_id}}","container":"{{container}}","token":"{{token}}"}'
+#
+
+
+job "{{build_id_with_prefix}}" {
+  region = "us"
+  datacenters = ["southlake", "arlington"]
+  type = "batch"
+
+  group "executor" {
+    task "executor" {
+      driver = "raw_exec"
+      config {
+        command = "/bin/bash"
+        args = [ "local/bootstrap.sh" ]
+      }
+      env {
+        SD_TOKEN = "{{token}}"
+      }
+
+      template {
+        data = <<EOT
+echo 'pull/create screwdrivercd launcher'
+docker pull screwdrivercd/launcher:{{launcher_version}}
+id=$(docker create screwdrivercd/launcher:{{launcher_version}})
+LAUNCHER="/opt/sd/launch --api-uri {{api_uri}} --store-uri {{store_uri}} --emitter /opt/sd/emitter {{build_id}}"
+LOGGER="/opt/sd/logservice --emitter /opt/sd/emitter --api-uri {{store_uri}} --build {{build_id}}"
+docker run \
+  --entrypoint /opt/sd/tini \
+  -e SD_TOKEN="$SD_TOKEN" \
+  --volumes-from $id \
+  {{container}} \
+  "--" \
+  "/bin/sh" \
+  "-c" \
+  "$LAUNCHER & $LOGGER & wait \$(jobs -p)"
+echo 'remove screwdrivercd launcher that we mounted from'
+docker rm $id
+          EOT
+        destination = "local/bootstrap.sh"
+      }
+
+      resources {
+        cpu = 2000
+        memory = 4096
+      }
+
+      service {
+        name = "launcher"
+        tags = [ "launcher" ]
+        check {
+          type = "script"
+          interval = "10s"
+          command = "/usr/bin/echo"
+          args = [ "okeydokee" ]
+          timeout = "2s"
+        }
+      }
     }
+  }
 }
