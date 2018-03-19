@@ -70,6 +70,7 @@ class NomadExecutor extends Executor {
             memory: MEMORY
         });
 
+        console.log('executor-nomad: POST')
         console.log(this.host)
         console.log(nomadTemplate)
 
@@ -80,12 +81,8 @@ class NomadExecutor extends Executor {
             strictSSL: false
         };
 
-        console.log(options)
-
         return this.breaker.runCommand(options)
             .then((resp) => {
-                console.log(resp.statusCode)
-                console.log(resp)
                 if (resp.statusCode !== 200) {
                     throw new Error(`Failed to create nomad: ${JSON.stringify(resp.body)}`);
                 }
@@ -104,9 +101,12 @@ class NomadExecutor extends Executor {
     _stop(config) {
         const options = {
             uri: this.host+'/'+this.prefix+this.buildId,
-            method: 'DELETE',
+            method: 'executor-nomad: DELETE',
             strictSSL: false
         };
+
+        console.log('DELETE')
+        console.log(this.host+'/'+this.prefix+this.buildId)
 
         return this.breaker.runCommand(options)
             .then((resp) => {
