@@ -80,9 +80,13 @@ class NomadExecutor extends Executor {
             strictSSL: false
         };
 
+        console.log(options)
+
         return this.breaker.runCommand(options)
             .then((resp) => {
-                if (resp.statusCode !== 201) {
+                console.log(resp.statusCode)
+                console.log(resp)
+                if (resp.statusCode !== 200) {
                     throw new Error(`Failed to create nomad: ${JSON.stringify(resp.body)}`);
                 }
 
