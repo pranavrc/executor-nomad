@@ -71,9 +71,7 @@ class NomadExecutor extends Executor {
             memory: MEMORY
         });
 
-        console.log('executor-nomad: POST')
-        console.log(this.host + '/v1/jobs')
-        console.log(nomadTemplate)
+        console.log('executor-nomad: POST ' + this.host + '/v1/jobs')
 
         const options = {
             uri: this.host + '/v1/jobs',
@@ -106,8 +104,7 @@ class NomadExecutor extends Executor {
             strictSSL: false
         };
 
-        console.log('executor-nomad: DELETE')
-        console.log(this.host+'/v1/job/'+this.prefix+config.buildId)
+        console.log('executor-nomad: DELETE ' + this.host + '/v1/job/'+this.prefix+config.buildId)
 
         return this.breaker.runCommand(options)
             .then((resp) => {

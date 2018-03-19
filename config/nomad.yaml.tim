@@ -11,6 +11,8 @@
         "AllAtOnce": null,
         "Datacenters": [
             "southlake",
+            "branchburg",
+            "coloradosprings",
             "arlington"
         ],
         "Constraints": null,
