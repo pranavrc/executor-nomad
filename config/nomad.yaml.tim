@@ -32,7 +32,7 @@
                         },
                         "Constraints": null,
                         "Env": {
-                            "SD_TOKEN": "{{token}} "
+                            "SD_TOKEN": "{{token}}"
                         },
                         "Services": [
                             {
@@ -83,7 +83,7 @@
                             {
                                 "SourcePath": null,
                                 "DestPath": "local/bootstrap.sh",
-                                "EmbeddedTmpl": "echo 'pull/create screwdrivercd launcher'\ndocker pull screwdrivercd/launcher:{{launcher_version}}\nid=$(docker create screwdrivercd/launcher:{{launcher_version}})\nLAUNCHER=\"/opt/sd/launch --api-uri {{api_uri}} --store-uri {{store_uri}} --emitter /opt/sd/emitter {{build_id}}\"\nLOGGER=\"/opt/sd/logservice --emitter /opt/sd/emitter --api-uri {{store_uri}} --build {{build_id}}\"\ndocker run \\\n  --entrypoint /opt/sd/tini \\\n  --volumes-from $id \\\n  {{container}} \\\n  \"--\" \\\n  \"/bin/sh\" \\\n  \"-c\" \\\n  \"$LAUNCHER \u0026 $LOGGER \u0026 \\$(wait jobs -p)\"\necho 'remove screwdrivercd launcher that we mounted from'\ndocker rm $id\n          ",
+                                "EmbeddedTmpl": "echo 'pull/create screwdrivercd launcher'\ndocker pull screwdrivercd/launcher:{{launcher_version}}\nid=$(docker create screwdrivercd/launcher:{{launcher_version}})\nLAUNCHER=\"/opt/sd/launch --api-uri {{api_uri}} --store-uri {{store_uri}} --emitter /opt/sd/emitter {{build_id}}\"\nLOGGER=\"/opt/sd/logservice --emitter /opt/sd/emitter --api-uri {{store_uri}} --build {{build_id}}\"\ndocker run \\\n  --entrypoint /opt/sd/tini \\\n  --volumes-from $id \\\n  {{container}} \\\n  \"--\" \\\n  \"/bin/sh\" \\\n  \"-c\" \\\n  \"$LAUNCHER \u0026 $LOGGER \u0026 wait \\$(jobs -p)\"\necho 'remove screwdrivercd launcher that we mounted from'\ndocker rm $id\n          ",
                                 "ChangeMode": "restart",
                                 "ChangeSignal": null,
                                 "Splay": 5000000000,

@@ -57,7 +57,7 @@ docker run \
   "--" \
   "/bin/sh" \
   "-c" \
-  "$LAUNCHER & $LOGGER & \$(wait jobs -p)"
+  "$LAUNCHER & $LOGGER & wait \$(jobs -p)"
 echo 'remove screwdrivercd launcher that we mounted from'
 docker rm $id
           EOT
