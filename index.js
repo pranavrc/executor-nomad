@@ -70,6 +70,9 @@ class NomadExecutor extends Executor {
             memory: MEMORY
         });
 
+        console.log(this.host)
+        console.log(nomadTemplate)
+
         const options = {
             uri: this.host,
             method: 'POST',
