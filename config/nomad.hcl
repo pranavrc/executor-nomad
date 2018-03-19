@@ -6,16 +6,18 @@
 # there is an issue with the datacenters, need to get that and the regions
 # from outside somewhere.  for now, hard coded.
 #
-# jt nomad.hcl '{"dc":["southlake","arlington"],"build_id_with_prefix":"{{build_id_with_prefix}}","launcher_version":"{{launcher_version}}","api_uri":"{{api_uri}}","store_uri":"{{store_uri}}","build_id":"{{build_id}}","container":"{{container}}","token":"{{token}}"}' | nomad run -output - > nomad.yaml.tim
+# and, we have a template to build a template, groovy, right?
+# cd config
+# jt nomad.hcl '{"dc":["southlake","arlington"],"build_id_with_prefix":"{{build_id_with_prefix}}","launcher_version":"{{launcher_version}}","api_uri":"{{api_uri}}","store_uri":"{{store_uri}}","build_id":"{{build_id}}","container":"{{container}}","token":"{{token}}","build_prefix":"{{build_prefix}}"}' | nomad run -output - > nomad.yaml.tim
 # 
-#
-# I basically copied the kubernetes executor and modified the template.
+# I copied the kubernetes executor and modified the template.  Very similar.
 #
 # Author: Greg Fausak
 # Sun Mar 18 08:31:44 CDT 2018
 #
 # args:
-#   build_id_with_prefix  build-1??
+#   build_id_with_prefix  sr-build-1
+#   build_prefix          sr-build
 #   launcher_version      stable,latest
 #   api_uri               https://api.com
 #   store_uri             https://store.com
@@ -23,10 +25,7 @@
 #   container             private.registry.com:5000/image:latest
 #   token                 jwt token for chatting with api/store
 # 
-# cd config
-# jt nomad.hcl '{"dc":["southlake","arlington"],"build_id_with_prefix":"{{build_id_with_prefix}}","launcher_version":"{{launcher_version}}","api_uri":"{{api_uri}}","store_uri":"{{store_uri}}","build_id":"{{build_id}}","container":"{{container}}","token":"{{token}}"}' | nomad run -output - > nomad.yaml.tim
 #
-
 
 job "{{build_id_with_prefix}}" {
   region = "us"
@@ -54,6 +53,7 @@ LOGGER="/opt/sd/logservice --emitter /opt/sd/emitter --api-uri {{store_uri}} --b
 docker run \
   --entrypoint /opt/sd/tini \
   -e SD_TOKEN="$SD_TOKEN" \
+  -v /var/run/docker.sock:/var/run/docker.sock \
   --volumes-from $id \
   {{container}} \
   "--" \
@@ -73,7 +73,7 @@ docker rm $id
 
       service {
         name = "launcher"
-        tags = [ "launcher" ]
+        tags = [ "launcher", "{{build_prefix}}" ]
         check {
           type = "script"
           interval = "10s"

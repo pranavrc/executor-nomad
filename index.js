@@ -61,6 +61,7 @@ class NomadExecutor extends Executor {
         const nomadTemplate = tinytim.renderFile(path.resolve(__dirname, './config/nomad.yaml.tim'), {
             build_id_with_prefix: `${this.prefix}${config.buildId}`,
             build_id: config.buildId,
+            build_prefix: this.prefix,
             container: config.container,
             api_uri: this.ecosystem.api,
             store_uri: this.ecosystem.store,
