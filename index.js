@@ -78,9 +78,6 @@ class NomadExecutor extends Executor {
         const options = {
             uri: this.host + '/v1/jobs',
             method: 'POST',
-            headers: {
-                Authorization: `Bearer ${this.token}`
-            },
             json: yaml.safeLoad(nomadTemplate),
             strictSSL: false
         };
@@ -105,14 +102,11 @@ class NomadExecutor extends Executor {
     _stop(config) {
         const options = {
             uri: this.host+'/v1/job/'+this.prefix+config.buildId,
-            method: 'executor-nomad: DELETE',
-            headers: {
-                Authorization: `Bearer ${this.token}`
-            },
+            method: 'DELETE',
             strictSSL: false
         };
 
-        console.log('DELETE')
+        console.log('executor-nomad: DELETE')
         console.log(this.host+'/v1/job/'+this.prefix+config.buildId)
 
         return this.breaker.runCommand(options)
