@@ -104,11 +104,12 @@ describe('index', function () {
             prefix: 'beta_',
             launchVersion: 'v1.2.3'
         });
+
         assert.equal(executor.prefix, 'beta_');
         assert.equal(executor.token, 'api_key2');
         assert.equal(executor.host, 'nomad2');
         assert.equal(executor.launchVersion, 'v1.2.3');
-        assert.equal(executor.jobsNamespace, 'baz');
+        assert.equal(executor.nomad.jobsNamespace, 'baz');
         assert.equal(executor.highCpu, 600);
         assert.equal(executor.highMemory, 4000);
     });
