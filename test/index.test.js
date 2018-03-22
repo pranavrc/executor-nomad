@@ -281,7 +281,7 @@ describe('index', function () {
             postConfig.json.metadata.cpu = 6000;
             postConfig.json.metadata.memory = 2;
 
-            return executor.start({
+            executor.start({
                 annotations: {
                     'beta.screwdriver.cd/cpu': 'HIGH'
                 },
