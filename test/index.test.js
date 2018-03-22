@@ -30,6 +30,7 @@ describe('index', function () {
     const testApiUri = 'http://api:8080';
     const testStoreUri = 'http://store:8080';
     const testContainer = 'node:4';
+    const testServiceAccount = 'foobar';
     const testLaunchVersion = 'stable';
     const nomadUrl = 'https://nomad.default/v1/jobs';
 

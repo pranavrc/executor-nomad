@@ -58,7 +58,8 @@ class NomadExecutor extends Executor {
     _start(config) {
         const CPU = this.highCpu;
         const MEMORY = this.highMemory;
-        const nomadTemplate = tinytim.renderFile(path.resolve(__dirname, './config/nomad.yaml.tim'), {
+        const configPath = path.resolve(__dirname, './config/nomad.yaml.tim');
+        const nomadTemplate = tinytim.renderFile(configPath, {
             build_id_with_prefix: `${this.prefix}${config.buildId}`,
             build_id: config.buildId,
             build_prefix: this.prefix,
@@ -71,10 +72,8 @@ class NomadExecutor extends Executor {
             memory: MEMORY
         });
 
-        console.log('executor-nomad: POST ' + this.host + '/v1/jobs')
-
         const options = {
-            uri: this.host + '/v1/jobs',
+            uri: `${this.host}/v1/jobs`,
             method: 'POST',
             json: yaml.safeLoad(nomadTemplate),
             strictSSL: false
@@ -99,12 +98,10 @@ class NomadExecutor extends Executor {
      */
     _stop(config) {
         const options = {
-            uri: this.host+'/v1/job/'+this.prefix+config.buildId,
+            uri: `${this.host}/v1/job/${this.prefix + config.buildId}`,
             method: 'DELETE',
             strictSSL: false
         };
-
-        console.log('executor-nomad: DELETE ' + this.host + '/v1/job/'+this.prefix+config.buildId)
 
         return this.breaker.runCommand(options)
             .then((resp) => {
