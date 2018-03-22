@@ -320,7 +320,7 @@ describe('index', function () {
                     message: 'lol'
                 }
             };
-            const returnMessage = `Failed to create pod: ${JSON.stringify(returnResponse.body)}`;
+            const returnMessage = `Failed to create nomad: ${JSON.stringify(returnResponse.body)}`;
 
             requestMock.yieldsAsync(null, returnResponse, returnResponse.body);
 
