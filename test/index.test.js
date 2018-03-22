@@ -123,7 +123,7 @@ describe('index', function () {
         assert.equal(executor.launchVersion, 'stable');
         assert.equal(executor.prefix, '');
         assert.equal(executor.highCpu, 600);
-        assert.equal(executor.highMemory, 4000);
+        assert.equal(executor.highMemory, 1024); // { default: 1024 }
     });
 
     it('extends base class', () => {
@@ -157,14 +157,8 @@ describe('index', function () {
             }
         };
         const deleteConfig = {
-            uri: nomadUrl,
+            uri: 'nomad.default/v1/job/beta_15',
             method: 'DELETE',
-            qs: {
-                labelSelector: `sdbuild=beta_${testBuildId}`
-            },
-            headers: {
-                Authorization: 'Bearer api_key'
-            },
             strictSSL: false
         };
 
@@ -204,7 +198,7 @@ describe('index', function () {
                 }
             };
 
-            const returnMessage = 'Failed to delete pod: '
+            const returnMessage = 'Failed to delete nomad: '
                   + `${JSON.stringify(fakeStopErrorResponse.body)}`;
 
             requestMock.yieldsAsync(null, fakeStopErrorResponse, fakeStopErrorResponse.body);
