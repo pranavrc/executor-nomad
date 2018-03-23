@@ -13,19 +13,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/screwdriver-cd/executor-nomad.git"
+    "url": "git+ssh://git@github.com/lgfausak/executor-nomad"
   },
-  "homepage": "https://github.com/screwdriver-cd/executor-nomad",
+  "homepage": "https://github.com/lgfausak/executor-nomad",
   "bugs": {
-    "url": "https://github.com/screwdriver-cd/executor-nomad/issues"
+    "url": "https://github.com/lgfausak/executor-nomad/issues"
   },
   "keywords": [
     "screwdriver",
-    "yahoo"
+    "yahoo",
+    "nomad"
   ],
   "license": "BSD-3-Clause",
   "author": "Greg Fausak <lgfausak@gmail.com>",
-  "contributors": [],
+  "contributors": ["Ethan Haynes <eghaynes17@gmail.com>"],
   "release": {
     "debug": false,
     "verifyConditions": {
