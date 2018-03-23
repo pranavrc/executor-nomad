@@ -1,6 +1,6 @@
 {
   "name": "screwdriver-executor-nomad",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Nomad Executor plugin for Screwdriver",
   "main": "index.js",
   "scripts": {
