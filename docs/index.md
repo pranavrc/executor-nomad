@@ -83,3 +83,10 @@ to run a script that is created by the [nomad.hcl](../config/nomad.hcl) file.
 This is run to accomplish the docker run with volumes from (until it
 is supported in Nomad's own docker driver).
 
+## Secrets
+
+Although not directly related, one might consider using Hashicorp's
+[Vault](https://www.hashicorp.com/products/vault) for secret
+management. The Screwdriver secrets can be used to deliver
+a vault token to your job, giving it the appropriate authorization
+to access secrets.  Very handy.
