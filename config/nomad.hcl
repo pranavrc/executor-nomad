@@ -8,7 +8,7 @@
 #
 # and, we have a template to build a template, groovy, right?
 # cd config
-# jt nomad.hcl '{"dc":["southlake","branchburg","coloradosprings","arlington"],"build_id_with_prefix":"{{build_id_with_prefix}}","launcher_version":"{{launcher_version}}","api_uri":"{{api_uri}}","store_uri":"{{store_uri}}","build_id":"{{build_id}}","container":"{{container}}","token":"{{token}}","build_prefix":"{{build_prefix}}"}' | nomad run -output - > nomad.yaml.tim
+# ( unset VAULT_TOKEN jt nomad.hcl '{"dc":["rocklin","twinsburg","southlake","branchburg","coloradosprings","arlington"],"build_id_with_prefix":"{{build_id_with_prefix}}","launcher_version":"{{launcher_version}}","api_uri":"{{api_uri}}","store_uri":"{{store_uri}}","build_id":"{{build_id}}","container":"{{container}}","token":"{{token}}","build_prefix":"{{build_prefix}}"}' | nomad run -output - > nomad.yaml.tim )
 # 
 # I copied the kubernetes executor and modified the template.  Very similar.
 #
@@ -25,6 +25,9 @@
 #   container             private.registry.com:5000/image:latest
 #   token                 jwt token for chatting with api/store
 # 
+# need to add:
+#   region: us, europe, world
+#   datacenter: [ "dc1", "dc2" ]
 #
 
 job "{{build_id_with_prefix}}" {
@@ -46,10 +49,13 @@ job "{{build_id_with_prefix}}" {
       template {
         data = <<EOT
 echo 'pull/create screwdrivercd launcher'
-docker pull screwdrivercd/launcher:{{launcher_version}}
-id=$(docker create screwdrivercd/launcher:{{launcher_version}})
-LAUNCHER="/opt/sd/launch --api-uri {{api_uri}} --store-uri {{store_uri}} --emitter /opt/sd/emitter {{build_id}}"
-LOGGER="/opt/sd/logservice --emitter /opt/sd/emitter --api-uri {{store_uri}} --build {{build_id}}"
+LREGISTRY="dockerhub.vcp.vzwops.com:5000"
+docker pull $LREGISTRY/launcher:{{launcher_version}}
+id=$(docker create $LREGISTRY/launcher:{{launcher_version}})
+EMITTER="/opt/sd/emitter"
+MKFIFO="mkfifo -m 666 $EMITTER"
+LAUNCHER="/opt/sd/launch --api-uri {{api_uri}} --store-uri {{store_uri}} --emitter $EMITTER {{build_id}}"
+LOGGER="/opt/sd/logservice --emitter $EMITTER --api-uri {{store_uri}} --build {{build_id}}"
 echo 'pull/create {{container}}, make sure the current one is cached'
 docker pull {{container}}
 docker run \
@@ -61,7 +67,7 @@ docker run \
   "--" \
   "/bin/sh" \
   "-c" \
-  "$LAUNCHER & $LOGGER & wait \$(jobs -p)"
+  "$MKFIFO & $LAUNCHER & $LOGGER & wait \$(jobs -p)"
 echo 'remove screwdrivercd launcher that we mounted from'
 docker rm $id
           EOT
