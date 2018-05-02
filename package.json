@@ -26,7 +26,9 @@
   ],
   "license": "BSD-3-Clause",
   "author": "Greg Fausak <lgfausak@gmail.com>",
-  "contributors": ["Ethan Haynes <eghaynes17@gmail.com>"],
+  "contributors": [
+    "Ethan Haynes <eghaynes17@gmail.com>"
+  ],
   "release": {
     "debug": false,
     "verifyConditions": {
@@ -46,7 +48,7 @@
     "hoek": "^5.0.2",
     "js-yaml": "^3.6.1",
     "request": "^2.72.0",
-    "screwdriver-executor-base": "^5.2.0",
+    "screwdriver-executor-base": "^6.1.0",
     "tinytim": "^0.1.1"
   },
   "directories": {
