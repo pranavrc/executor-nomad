@@ -13,7 +13,7 @@
 # I copied the kubernetes executor and modified the template.  Very similar.
 #
 # Author: Greg Fausak
-# Sun Mar 18 08:31:44 CDT 2018
+# Fri May  4 06:59:44 CDT 2018
 #
 # args:
 #   build_id_with_prefix  sr-build-1
@@ -67,7 +67,7 @@ docker run \
   "--" \
   "/bin/sh" \
   "-c" \
-  "$MKFIFO & $LAUNCHER & $LOGGER & wait \$(jobs -p)"
+  "$MKFIFO && ($LAUNCHER & $LOGGER & wait \$(jobs -p))"
 echo 'remove screwdrivercd launcher that we mounted from'
 docker rm $id
           EOT
@@ -81,7 +81,7 @@ docker rm $id
 
       service {
         name = "launcher"
-        tags = [ "launcher", "{{build_prefix}}" ]
+        tags = [ "screwdriver", "launcher", "{{build_prefix}}" ]
         check {
           type = "script"
           interval = "10s"

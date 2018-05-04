@@ -43,6 +43,7 @@
                                 "Id": "",
                                 "Name": "launcher",
                                 "Tags": [
+                                    "screwdriver",
                                     "launcher",
                                     "{{build_prefix}}"
                                 ],
@@ -88,7 +89,7 @@
                             {
                                 "SourcePath": null,
                                 "DestPath": "local/bootstrap.sh",
-                                "EmbeddedTmpl": "echo 'pull/create screwdrivercd launcher'\nLREGISTRY=\"dockerhub.vcp.vzwops.com:5000\"\ndocker pull $LREGISTRY/launcher:{{launcher_version}}\nid=$(docker create $LREGISTRY/launcher:{{launcher_version}})\nEMITTER=\"/opt/sd/emitter\"\nMKFIFO=\"mkfifo -m 666 $EMITTER\"\nLAUNCHER=\"/opt/sd/launch --api-uri {{api_uri}} --store-uri {{store_uri}} --emitter $EMITTER {{build_id}}\"\nLOGGER=\"/opt/sd/logservice --emitter $EMITTER --api-uri {{store_uri}} --build {{build_id}}\"\necho 'pull/create {{container}}, make sure the current one is cached'\ndocker pull {{container}}\ndocker run \\\n  --entrypoint /opt/sd/tini \\\n  -e SD_TOKEN=\"$SD_TOKEN\" \\\n  -v /var/run/docker.sock:/var/run/docker.sock \\\n  --volumes-from $id \\\n  {{container}} \\\n  \"--\" \\\n  \"/bin/sh\" \\\n  \"-c\" \\\n  \"$MKFIFO \u0026 $LAUNCHER \u0026 $LOGGER \u0026 wait \\$(jobs -p)\"\necho 'remove screwdrivercd launcher that we mounted from'\ndocker rm $id\n          ",
+                                "EmbeddedTmpl": "echo 'pull/create screwdrivercd launcher'\nLREGISTRY=\"dockerhub.vcp.vzwops.com:5000\"\ndocker pull $LREGISTRY/launcher:{{launcher_version}}\nid=$(docker create $LREGISTRY/launcher:{{launcher_version}})\nEMITTER=\"/opt/sd/emitter\"\nMKFIFO=\"mkfifo -m 666 $EMITTER\"\nLAUNCHER=\"/opt/sd/launch --api-uri {{api_uri}} --store-uri {{store_uri}} --emitter $EMITTER {{build_id}}\"\nLOGGER=\"/opt/sd/logservice --emitter $EMITTER --api-uri {{store_uri}} --build {{build_id}}\"\necho 'pull/create {{container}}, make sure the current one is cached'\ndocker pull {{container}}\ndocker run \\\n  --entrypoint /opt/sd/tini \\\n  -e SD_TOKEN=\"$SD_TOKEN\" \\\n  -v /var/run/docker.sock:/var/run/docker.sock \\\n  --volumes-from $id \\\n  {{container}} \\\n  \"--\" \\\n  \"/bin/sh\" \\\n  \"-c\" \\\n  \"$MKFIFO \u0026\u0026 ($LAUNCHER \u0026 $LOGGER \u0026 wait \\$(jobs -p))\"\necho 'remove screwdrivercd launcher that we mounted from'\ndocker rm $id\n          ",
                                 "ChangeMode": "restart",
                                 "ChangeSignal": null,
                                 "Splay": 5000000000,
