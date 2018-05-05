@@ -41,3 +41,10 @@ Code licensed under the BSD 3-Clause license. See LICENSE file for terms.
 
 [details](docs/index.md) about Nomad usage with Screwdriver can be found here.
 
+## Dockerfile.launcher
+
+The config/nomad.hcl has been modified to create a emitter named pipe
+on startup.  That means that launcher must be built without the named pipe.
+There is a local Dockerfile.launcher with an example of the replacements
+you will need to make to launcher's Dockerfile.  Basically, remove the named pipe creation.
+This all stems from a bug not supporting 18.x.x.
