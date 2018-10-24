@@ -23,6 +23,7 @@ class NomadExecutor extends Executor {
      * @param  {String} [options.nomad.resources.cpu.high=600]        Value for HIGH CPU (in Mhz)
      * @param  {Number} [options.nomad.resources.memory.high=4096]    Value for HIGH memory (in MB)
      * @param  {String} [options.launchVersion=stable]                Launcher container version to use
+     * @param  {String} [options.buildTimeout=90]                     Build timeout
      * @param  {String} [options.prefix='']                           Prefix for job name
      * @param  {String} [options.fusebox]                             Options for the circuit breaker (https://github.com/screwdriver-cd/circuit-fuses)
      */
@@ -40,6 +41,7 @@ class NomadExecutor extends Executor {
         }
         this.host = this.nomad.host || 'nomad.default';
         this.launchVersion = options.launchVersion || 'stable';
+        this.buildTimeout = options.buildTimeout || '90';
         this.prefix = options.prefix || '';
         this.breaker = new Fusebox(request, options.fusebox);
         this.highCpu = hoek.reach(options, 'nomad.resources.cpu.high', { default: 600 });
@@ -66,6 +68,7 @@ class NomadExecutor extends Executor {
             container: config.container,
             api_uri: this.ecosystem.api,
             store_uri: this.ecosystem.store,
+            build_timeout: this.buildTimeout,
             token: config.token,
             launcher_version: this.launchVersion,
             cpu: CPU,

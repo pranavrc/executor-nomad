@@ -1,6 +1,6 @@
 {
   "name": "screwdriver-executor-nomad",
-  "version": "1.0.4",
+  "version": "1.0.13",
   "description": "Nomad Executor plugin for Screwdriver",
   "main": "index.js",
   "scripts": {
@@ -47,7 +47,7 @@
     "circuit-fuses": "^2.1.0",
     "hoek": "^5.0.2",
     "js-yaml": "^3.6.1",
-    "request": "^2.72.0",
+    "request": "^2.87.0",
     "screwdriver-executor-base": "^6.1.0",
     "tinytim": "^0.1.1"
   },
